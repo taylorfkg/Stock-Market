@@ -20,32 +20,6 @@ library(lubridate)
 #nas100_companies <- read_html("https://en.wikipedia.org/wiki/NASDAQ-100") %>% html_nodes("table") %>%  html_table(3,fill= T)
 #nas100_companies <- nas100_companies[[3]]
 
-#as.numeric(bond_page %>% html_node(".u-semi") %>% html_text() %>% gsub("%","",.))/100
-
-##Test Objects----------------
-income_page <- read_html("https://www.marketwatch.com/investing/stock/bac/financials?mod=mw_quote_tab")
-balance_page <- read_html("https://www.marketwatch.com/investing/stock/bac/financials/balance-sheet")
-cash_page <- read_html("https://www.marketwatch.com/investing/stock/bac/financials/cash-flow")
-
-income_page %>% 
-  html_nodes(".company__name") %>% html_text()
-
-income_page %>% 
-  html_nodes(".company__symbol span") %>% html_text()
-
-cash_page %>% 
-  html_nodes(".small") %>% 
-  html_text() %>% 
-  .[1]
-
-  
-income_page %>% 
-  html_nodes(".u-semi") %>% 
-  html_text() %>% 
-  str_sub(.,2,nchar(.)) %>% 
-  as.numeric()
-
-
 #######GET FINANCIALS FUNCTION-----------------
 get_financials <<- function(){
   
