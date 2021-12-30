@@ -1,13 +1,10 @@
 library(rvest)
-#library(dplyr)
-#library(stringr)
 library(XML)
 library(urltools)
 library(RCurl)
 library(V8)
 library(curl)
 library(data.table)
-#library(xlsx)
 library(svDialogs)
 #library(esquisse)
 library(tidyverse)
@@ -145,25 +142,6 @@ get_financials <<- function(){
       
     }
         
-        # Beta <<- if_else(is.null(stock_page),"1",
-        #                  stock_page %>% html_node(".top-table+ .top-table tr:nth-child(6) td+ td") %>% html_text())
-        # 
-        # analyst <<- if_else(is.null(stock_page),"N/A",
-        #                     stock_page %>% html_node(".top-table+ .top-table tr:nth-child(7) td+ td") %>% html_text())
-        # 
-        # price_target <<- if_else(is.null(stock_page),"N/A",
-        #                          stock_page %>% html_node(".top-table+ .top-table tr:nth-child(8) td+ td") %>% html_text())
-        # 
-        # earnings_date <<- if_else(is.null(stock_page),"N/A",
-        #                           stock_page %>% html_node(".top-table+ .top-table tr:nth-child(9) td+ td") %>% html_text())
-        # 
-        # fwd_pe <<- if_else(is.null(stock_page),"N/A",
-        #                    stock_page %>% html_node(".top-table:nth-child(1) tr:nth-child(7) td+ td") %>% html_text())
-        # 
-        # dividend_date <<- if_else(is.null(stock_page),"N/A",
-        #                           stock_page %>% html_node(".top-table:nth-child(1) tr:nth-child(9) td+ td") %>% html_text())
-    
-    
     header <<- income_page %>% html_nodes(".overflow__heading .cell__content") %>% html_text() %>% .[.!="Item"&.!="5-year trend"]
     
     ins_name <<- income_page %>% html_nodes(".company__name") %>% html_text()
@@ -1892,16 +1870,8 @@ for (j in tickers){
 colnames(comparison_grid) <- comparison_grid[1,]
 View(comparison_grid)
 
-#prices <- prices %>% distinct()
-
 
 ######################################################################
-
-write.csv(dcf_statement,"SNA_DCF.csv",row.names = TRUE,na = "")
-
-# comparison_grid <- cbind(ttm_financial_statement)
-
-# comparison_grid <- comparison_grid[,1]
 
 viz_data <- data.frame(t(comparison_grid)) %>% distinct(ins_ticker,.keep_all = T)
 
@@ -1916,7 +1886,6 @@ fwrite(viz_data_transposed,"sp500_data_transposed.csv")
 fwrite(viz_data_qtr_transposed,"vertical_comparison_grid_qtr.csv")
 
 write.csv(comparison_grid,"horizontal_comparison_grid.csv",row.names = TRUE)
-
 
 quality_list <- viz_data %>%
   mutate(net_debt=as.numeric(TTM.Total.Debt)-as.numeric(TTM.Cash...Short.Term.Investments),
@@ -1939,30 +1908,15 @@ quality_list <- viz_data %>%
 quality_list %>% View()
 
 quality_list %>% 
-  select(sales_to_invested_capital) %>% 
-  ggplot(aes(sales_to_invested_capital))+
-  geom_histogram()
+  select(TTM.Net.Profit.Margin..) %>%
+  mutate(Group="A",Margin=as.numeric(TTM.Net.Profit.Margin..)*100) %>%
+  filter(Margin>0,Margin<100) %>% 
+  ggplot(aes(Margin,Group,color=Margin))+
+  geom_boxplot()+geom_point(alpha=0.75)+geom_jitter()+
+  scale_color_gradient(low="red", high="green")
 
 
 get_financials()
-
-plot(dcf_statement["FCFF",][1:11])
-
-
-
-# fwrite(sp_companies,"s&p companies.csv")
-
-# input_ticker <<- dlgInput("Enter ticker")$res %>% str_split(.,",") %>% unlist()
-
-# comparison_grid <- NULL
-
-# comparison_grid_tech_sector <- comparison_grid
-
-semiconductor_df <- viz_data %>% 
-  filter(ins_ticker %in% c("INTC","AMD","NVDA","QCOM","MU","TSM","AVGO","TXN","SWKS","QRVO","NXPI","SYNA","HIMX") ) %>%
-  t()
-
-semiconductor_df <- comparison_grid
 
 write.csv(semiconductor_df,"semiconductor_data.csv",row.names = TRUE)
 
@@ -1970,7 +1924,7 @@ write.csv(intc_financial_statements,"intc.csv",row.names = TRUE)
 
 plot(financial_statement["Free Cash Flow",])
 
-###---------------------
+###----Forecast Tests---------------------
 tsdata <- ts(as.numeric(financial_statement["Sales/Revenue",][1:6]),start=1,frequency=1)
 
 plot(tsdata)
@@ -1997,55 +1951,8 @@ hw <- HoltWinters(fore_data,beta = FALSE, gamma = FALSE)
 plot(hw)
 
 
-# test_page <<- read_html("https://www.marketwatch.com/investing/stock/FB")
-# 
-# latest_price_1day_chg <<- test_page %>% html_nodes(".change--percent--q bg-quote") %>% html_text()
-# 
-# latest_price_5day_chg <<- test_page %>% html_nodes(".table__row:nth-child(1) .value") %>% html_text()
-# 
-# latest_price_1mnth_chg <<- test_page %>% html_nodes(".table__row:nth-child(2) .value") %>% html_text()
-# 
-# latest_price_3mnth_chg <<- test_page %>% html_nodes(".table__row:nth-child(3) .value") %>% html_text()
-# 
-# latest_price_ytd_chg <<- test_page %>% html_nodes(".table__row:nth-child(4) .value") %>% html_text()
-# 
-# latest_price_1yr_chg <<- test_page %>% html_nodes(".table__row:nth-child(5) .value") %>% html_text()
-
-###-------------------
-
-get("Sales/Revenue")
-test <- as.matrix(rbind(mget(income_rows_x)))
-
-View(cash_rows)
-
-comparison_grid_backup <- comparison_grid
-
-CERN_dcf_statement %>% as.tibble(rownames = "rowname")
-
-
-
-write.csv(GRMN_financial_statements,"financial_statement.csv",row.names = TRUE)
-
-write.csv(comparison_grid,"comparison_grid.csv",row.names = TRUE)
-
-write.csv(STMP_qtr_financial_statements,"STMP_qtr_financials.csv",row.names = TRUE)
-
-
 fwrite(matrix(c(row.names(financial_statement),
           row.names(ttm_financial_statement),
           row.names(LT_QTR_financial_statement))),"names.csv")
 
-income_page %>% 
-  html_nodes(".u-semi") %>% 
-  html_text() %>% 
-  gsub(",","",.) %>% 
-  str_extract(.,"[a-z]|\\$|\\€")
 
-income_page %>% 
-  html_nodes(".u-semi") %>% 
-  html_text() %>% 
-  #gsub(",","",.) %>% 
-  str_extract(.,"\\d")
-
-
-#keep <- askYesNo("Keep Comparison Grid", default = TRUE,prompts = getOption("askYesNo", gettext(c("Yes", "No"))))
