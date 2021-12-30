@@ -25,7 +25,11 @@ get_financials <<- function(){
   
   input_ticker <<- dlgInput("Enter ticker")$res %>% str_split(.,",") %>% unlist()
   
-  keep <- askYesNo("Keep Comparison Grid", default = TRUE,prompts = getOption("askYesNo", gettext(c("Yes", "No"))))
+  # keep <- askYesNo("Keep Comparison Grid", default = TRUE,prompts = getOption("askYesNo", gettext(c("Yes", "No"))))
+  
+  keep <- dlg_message("Keep Comparison Grid",c("yesno"),gui = .GUI)$res
+  
+  keep <- ifelse(keep=="yes",TRUE,FALSE)
   
   if (keep==FALSE){
     comparison_grid <- NULL
