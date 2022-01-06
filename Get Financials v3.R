@@ -1425,9 +1425,11 @@ fcfe_discount_rate <<- CAPM
 
 #terminal_cagr <<- case_when(`FCF CAGR`>0.2&`LT_QTR Sales Growth`>0&`LT_QTR EBITDA Growth`>0~0.025,`FCF CAGR`>0.1~0.015,`FCF CAGR`>0.05~0.005,`FCF CAGR`>0~0.0025,TRUE~0.001)
 
-terminal_cagr <<- if_else((sales_growth_estimate*0.1)>0.02,0.02,sales_growth_estimate*0.1)
+# terminal_cagr <<- if_else((sales_growth_estimate*0.1)>0.02,0.02,sales_growth_estimate*0.1)
+# 
+# terminal_cagr <<- max(terminal_cagr,0.001)
 
-terminal_cagr <<- max(terminal_cagr,0.001)
+terminal_cagr <<- `Risk Free`
 
 #terminal_cagr <<- case_when(FCF_Growth>=0.2~0.03,FCF_Growth>=0.1~0.025,FCF_Growth>=0.05~0.015,FCF_Growth>0.0025~0.010,TRUE~0.001)
 
@@ -1828,9 +1830,11 @@ FCFF_Terminal_Multiple <<- 1/(fcff_discount_rate - terminal_cagr)
 
 get_financials()
 
-write.csv(dcf_statement,"LRCX_dcf.csv",row.names = TRUE)
+write.csv(dcf_statement,paste0(input_ticker,"_dcf.csv"),row.names = TRUE)
 
-write.csv(financial_statement,"BATS_Financial.csv",row.names = TRUE,na = "")
+write.csv(financial_statement,paste0(input_ticker,"_Financial.csv"),row.names = TRUE,na = "")
+
+write.csv(comparison_grid,"oc_competitors.csv",row.names = TRUE)
 
 ##Manual Comparison Grid
 #######################################################################
@@ -1895,17 +1899,20 @@ quality_list <- viz_data %>%
          sales_to_invested_capital=as.numeric(TTM.Sales.Revenue)/invested_capital
          ) %>% 
   filter(TTM.Gross.Profit.Margin>=0.3,TTM.Net.Profit.Margin..>=0.1,
-         net_debt_to_equity>=0&net_debt_to_equity<=1.5,TTM.Return.On.Equity>=0.1,
-         TTM.Current.Ratio>=1.5,TTM.Free.Cash.Flow>0,TTM.Sales.Revenue.CAGR>0,
+         TTM.Total.Shareholders..Equity>=0,net_debt_to_equity<=1.5,TTM.Return.On.Equity>=0.1,
+         TTM.Current.Ratio>=1,TTM.Free.Cash.Flow>0,TTM.Sales.Revenue.CAGR>0,
          TTM.Cash.Dividends.Paid...Total<0|TTM.Repurchase.of.Common...Preferred.Stk.<0,
          !is.na(as.numeric(TTM.Net.Profit.Margin..)),!is.nan(as.numeric(TTM.Net.Profit.Margin..)),
-         !is.infinite(as.numeric(TTM.Net.Profit.Margin..)),TTM.Sales.Growth>0,roic>=0.1,sales_to_invested_capital>=0.5
+         !is.infinite(as.numeric(TTM.Net.Profit.Margin..)),TTM.Sales.Growth>0,roic>=0.1,sales_to_invested_capital>=0.5,as.numeric(TTM.Net.Income.Growth)>0
          ) %>%
-  arrange(as.numeric(TTM.Net.Profit.Margin..),as.numeric(Intrinsic.Value.Gap..)) %>% 
+  arrange(as.numeric(Intrinsic.Value.Gap..)) %>% 
   select(ins_name,ins_ticker,latest_price_currency,latest_price,Intrinsic.Value.Price,TTM.currency,TTM.Sales.Revenue,TTM.Sales.Growth,TTM.Gross.Income,TTM.Gross.Income.Growth,
-         TTM.Gross.Profit.Margin,TTM.Net.Income,TTM.Net.Income.Growth,TTM.Net.Profit.Margin..,everything())
+         TTM.Gross.Profit.Margin,TTM.Net.Income,TTM.Net.Income.Growth,TTM.Net.Profit.Margin..,net_debt,net_debt_to_equity,invested_capital,
+         roic,sales_to_invested_capital,everything())
 
-quality_list %>% View()
+View(quality_list)
+
+fwrite(quality_list,"quality_list.csv")
 
 quality_list %>% 
   select(TTM.Net.Profit.Margin..) %>%
