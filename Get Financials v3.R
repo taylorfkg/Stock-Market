@@ -1925,11 +1925,33 @@ quality_list %>%
 
 get_financials()
 
+
+growth_list <- viz_data %>%
+  mutate(net_debt=as.numeric(TTM.Total.Debt)-as.numeric(TTM.Cash...Short.Term.Investments),
+         net_debt_to_equity=net_debt/as.numeric(TTM.Total.Shareholders..Equity),
+         invested_capital=net_debt+as.numeric(TTM.Total.Shareholders..Equity),
+         roic=as.numeric(TTM.Net.Income)/invested_capital,
+         sales_to_invested_capital=as.numeric(TTM.Sales.Revenue)/invested_capital
+  ) %>% 
+  filter(TTM.Sales.Revenue.CAGR>0.3,TTM.Sales.Growth>0.5,TTM.Sales.Revenue>0,TTM.Gross.Profit.Margin>=0.1,
+         !is.na(as.numeric(TTM.Gross.Profit.Margin)),!is.nan(as.numeric(TTM.Gross.Profit.Margin)),
+         !is.infinite(as.numeric(TTM.Gross.Profit.Margin)),TTM.currency=="USD") %>%
+  arrange(as.numeric(TTM.Price.To.Sales)) %>% 
+  select(ins_name,ins_ticker,latest_price_currency,latest_price,Intrinsic.Value.Price,TTM.currency,TTM.Price.To.Sales,TTM.Sales.Revenue,TTM.Sales.Growth,TTM.Gross.Income,TTM.Gross.Income.Growth,
+         TTM.Gross.Profit.Margin,TTM.Net.Income,TTM.Net.Income.Growth,TTM.Net.Profit.Margin..,net_debt,net_debt_to_equity,invested_capital,
+         roic,sales_to_invested_capital,everything())
+
+View(growth_list)
+
+
 write.csv(semiconductor_df,"semiconductor_data.csv",row.names = TRUE)
 
 write.csv(intc_financial_statements,"intc.csv",row.names = TRUE)
 
 plot(financial_statement["Free Cash Flow",])
+
+saveRDS(comparison_grid, file = "comparison_grid.rds")
+
 
 ###----Forecast Tests---------------------
 tsdata <- ts(as.numeric(financial_statement["Sales/Revenue",][1:6]),start=1,frequency=1)
